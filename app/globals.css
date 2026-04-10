@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #040414;
+  --color-gradient-1: #040414;
+  --color-gradient-2: #0b0b1e;
+}
