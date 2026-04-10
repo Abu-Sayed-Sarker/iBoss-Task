@@ -13,7 +13,7 @@ const authSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload;
-      
+      setCookie("role", action.payload?.role);
       // Update cookies if we have both user and token
       if (state.accessToken && typeof window !== "undefined") {
         const authData = JSON.stringify({
@@ -21,7 +21,6 @@ const authSlice = createSlice({
           user: action.payload,
         });
         setCookie("auth", authData);
-        setCookie("role", action.payload?.role);
       }
     },
     setTokens: (state, action) => {

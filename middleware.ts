@@ -45,7 +45,7 @@ export function middleware(request: NextRequest) {
   // 4. Gate 2: Check Authorization (Role-based access)
   // Admin routes vs User routes
   const isAdminPath =
-    pathname.startsWith("/admin") || pathname.startsWith("/added-post");
+    pathname.startsWith("/admin") || pathname.startsWith("/add-test");
   const isUserPath =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/my-booking") ||
