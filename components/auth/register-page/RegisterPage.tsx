@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRegisterMutation } from "@/apis/auth/authApi";
 import { useDispatch } from "react-redux";
 import { setUser, setTokens } from "@/features/authSlice";
-import { setCookie } from "@/utils/cookies";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
@@ -43,26 +42,17 @@ const RegisterPage = () => {
       if (response.success) {
         const { user, accessToken, refreshToken } = response.data;
 
-        // 1. Store in Redux
         dispatch(setUser(user));
         dispatch(setTokens({ accessToken, refreshToken }));
 
-        // 2. Store in Cookie for Middleware (as a JSON string)
-        const authData = JSON.stringify({
-          access: accessToken,
-          user: user,
-        });
-        setCookie("auth", authData);
-
-        // 3. Store role separately as well for easy access
-        setCookie("role", user.role);
-
-        toast.success("Registration Successful!");
+        toast.success(response?.message || "Registration Successful!");
         router.push("/dashboard");
       }
     } catch (err: any) {
       console.error("Registration failed:", err);
-      toast.error(err?.data?.message || "Registration failed. Please try again.");
+      toast.error(
+        err?.data?.message || "Registration failed. Please try again.",
+      );
     }
   };
 

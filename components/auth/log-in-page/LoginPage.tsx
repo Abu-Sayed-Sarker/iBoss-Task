@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useLoginMutation } from "@/apis/auth/authApi";
 import { useDispatch } from "react-redux";
 import { setUser, setTokens } from "@/features/authSlice";
-import { setCookie } from "@/utils/cookies";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
@@ -30,25 +29,17 @@ const LoginPage = () => {
 
       if (response.success) {
         const { user, accessToken, refreshToken } = response.data;
-
-        // 1. Store in Redux
         dispatch(setUser(user));
         dispatch(setTokens({ accessToken, refreshToken }));
 
-        // 2. Store in Cookie for Middleware
-        const authData = JSON.stringify({
-          access: accessToken,
-          user: user,
-        });
-        setCookie("auth", authData);
-        setCookie("role", user.role);
-
-        toast.success("Login Successful!");
+        toast.success(response?.message || "Login Successful!");
         router.push("/dashboard");
       }
     } catch (err: any) {
       console.error("Login failed:", err);
-      toast.error(err?.data?.message || "Login failed. Please check your credentials.");
+      toast.error(
+        err?.data?.message || "Login failed. Please check your credentials.",
+      );
     }
   };
 
