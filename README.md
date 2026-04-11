@@ -8,8 +8,8 @@ A state-of-the-art, responsive web application for managing assessment workflows
 
 - **Live Swagger API Docs**: [Interactive API Documentation](http://76.13.195.67:5001/api/docs/)
 - **Admin Demo Credentials**:
-  - **Email**: `abusayed9672@gmail.com`
-  - **Password**: `Pa$$w0rd!`
+  - **Email**: `admin@mail.com`
+  - **Password**: `adminPassword123`
 
 ---
 
