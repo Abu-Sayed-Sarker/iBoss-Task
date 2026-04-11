@@ -2,6 +2,17 @@
 
 A state-of-the-art, responsive web application for managing assessment workflows. This frontend provides a seamless interface for administrators to design tests and for candidates to participate in real-time, timed examinations.
 
+---
+
+## 🔗 Demo & Documentation
+
+- **Live Swagger API Docs**: [Interactive API Documentation](http://76.13.195.67:5001/api/docs/)
+- **Admin Demo Credentials**:
+  - **Email**: `abusayed9672@gmail.com`
+  - **Password**: `Pa$$w0rd!`
+
+---
+
 ## ✨ Key Features
 
 ### 🏢 Unified Dashboard
