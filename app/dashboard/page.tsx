@@ -10,30 +10,46 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  XCircle,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import { useGetAllTestsQuery } from "@/apis/tests/testsApi";
+
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { useRouter } from "next/navigation";
 
 // Types
 interface Test {
   id: number;
   title: string;
   candidates: string;
+  duration: string;
   question_set: string;
   slots: number;
   question_type: string;
   created_at: string;
   updated_at: string;
+  questions: any[];
+  is_submitted: boolean;
+  submission_count: string;
 }
 
 const DashboardPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { data: testsResponse, isLoading } = useGetAllTestsQuery(undefined);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const router = useRouter();
 
   const tests = testsResponse?.data || [];
 
   const filteredTests = tests.filter((test: Test) =>
     test.title.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const isAdmin = useSelector(
+    (state: RootState) => state.auth.user?.role === "admin",
   );
 
   return (
@@ -61,13 +77,15 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <Link
-          href="/dashboard/add-test"
-          className="h-11 px-6 bg-[#6339f9] text-white font-bold rounded-xl hover:bg-[#522ed1] transition-all shadow-lg shadow-indigo-100 flex items-center gap-2 whitespace-nowrap"
-        >
-          <Plus className="w-5 h-5" />
-          Create Online Test
-        </Link>
+        {isAdmin && (
+          <Link
+            href="/dashboard/add-test"
+            className="h-11 px-6 bg-[#6339f9] text-white font-bold rounded-xl hover:bg-[#522ed1] transition-all shadow-lg shadow-indigo-100 flex items-center gap-2 whitespace-nowrap"
+          >
+            <Plus className="w-5 h-5" />
+            Create Online Test
+          </Link>
+        )}
       </div>
 
       {/* Conditional Rendering: Grid or Empty State */}
@@ -99,50 +117,73 @@ const DashboardPage = () => {
                 {test.title}
               </h2>
 
-              <div className="flex flex-wrap items-center gap-x-10 gap-y-4 mb-10">
-                {/* Candidates */}
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-gray-300" />
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 mb-10">
+                {/* Duration */}
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 flex items-center justify-center text-gray-400">
+                    <Clock className="w-4 h-4" />
                   </div>
-                  <div className="flex gap-1.5 text-[15px]">
-                    <span className="text-gray-400">Candidates:</span>
-                    <span className="text-[#1e1e50] font-bold">
-                      {test.candidates ? "N/A" : "0"}
+                  <div className="flex gap-1.5 text-[14px]">
+                    <span className="text-gray-400">Duration:</span>
+                    <span className="text-[#101010] font-bold">
+                      {test.duration || "30 min"}
                     </span>
                   </div>
                 </div>
 
-                {/* Question Set */}
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 flex items-center justify-center text-gray-300">
-                    <FileText className="w-5 h-5" />
+                {/* Questions Count */}
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 flex items-center justify-center text-gray-400">
+                    <FileText className="w-4 h-4" />
                   </div>
-                  <div className="flex gap-1.5 text-[15px]">
-                    <span className="text-gray-400">Question Set:</span>
-                    <span className="text-[#1e1e50] font-bold">
-                      {test.question_set || "Not Set"}
+                  <div className="flex gap-1.5 text-[14px]">
+                    <span className="text-gray-400">Question:</span>
+                    <span className="text-[#101010] font-bold">
+                      {test.questions?.length || 0}
                     </span>
                   </div>
                 </div>
 
-                {/* Exam Slots */}
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 flex items-center justify-center text-gray-300">
-                    <Clock className="w-5 h-5" />
+                {/* Negative Marking */}
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 flex items-center justify-center text-gray-400">
+                    <XCircle className="w-4 h-4" />
                   </div>
-                  <div className="flex gap-1.5 text-[15px]">
-                    <span className="text-gray-400">Exam Slots:</span>
-                    <span className="text-[#1e1e50] font-bold">
-                      {test.slots || "Not Set"}
+                  <div className="flex gap-1.5 text-[14px]">
+                    <span className="text-gray-400">Negative Marking:</span>
+                    <span className="text-[#101010] font-bold">
+                      -0.25/wrong
                     </span>
                   </div>
                 </div>
               </div>
 
-              <button className="px-7 py-2.5 rounded-xl border border-[#6339f9]/30 text-[#6339f9] font-bold text-[14px] hover:bg-[#6339f9] hover:text-white transition-all shadow-sm active:scale-95">
-                View Candidates
-              </button>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    if (isAdmin) {
+                      router.push(`/dashboard/manage-test/${test.id}`);
+                    } else if (!test.is_submitted) {
+                      router.push(`/dashboard/exam/${test.id}`);
+                    }
+                  }}
+                  disabled={!isAdmin && test.is_submitted}
+                  className={`px-7 py-2.5 rounded-xl font-bold text-[14px] transition-all shadow-sm active:scale-95 ${
+                    !isAdmin && test.is_submitted
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed border-transparent"
+                      : "border border-[#6339f9]/30 text-[#6339f9] hover:bg-[#6339f9] hover:text-white"
+                  }`}
+                >
+                  {isAdmin ? "View Details" : test.is_submitted ? "Submitted" : "Start"}
+                </button>
+                
+                {!isAdmin && test.is_submitted && (
+                  <span className="text-[12px] font-bold text-green-500 flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Completed
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>

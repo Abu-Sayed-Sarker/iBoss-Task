@@ -23,6 +23,9 @@ const QuestionsSetsPage = () => {
     skip: !testId,
   });
 
+  console.log("Current Test ID:", testId);
+  console.log("Full Test Response:", testResponse);
+
   const [addQuestion, { isLoading: isAdding }] = useAddQuestionMutation();
   const [updateQuestion, { isLoading: isUpdating }] = useUpdateQuestionMutation();
   const [deleteQuestion, { isLoading: isDeleting }] = useDeleteQuestionMutation();

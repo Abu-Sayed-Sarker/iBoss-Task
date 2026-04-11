@@ -5,11 +5,24 @@ import Link from "next/link";
 import { Clock, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { useCreateTestMutation } from "@/apis/tests/testsApi";
+import { useSearchParams } from "next/navigation";
+import { 
+  useCreateTestMutation, 
+  useUpdateTestMutation, 
+  useGetTestByIdQuery 
+} from "@/apis/tests/testsApi";
 
 const AddTestPage = () => {
   const router = useRouter();
-  const [createTest, { isLoading }] = useCreateTestMutation();
+  const searchParams = useSearchParams();
+  const testId = searchParams.get("id");
+
+  const [createTest, { isLoading: isCreating }] = useCreateTestMutation();
+  const [updateTest, { isLoading: isUpdating }] = useUpdateTestMutation();
+  const { data: testResponse, isSuccess: isFetchSuccess } = useGetTestByIdQuery(testId, {
+    skip: !testId,
+  });
+
   const [formData, setFormData] = useState({
     title: "",
     candidates: "",
@@ -20,6 +33,23 @@ const AddTestPage = () => {
     endTime: "",
     duration: "",
   });
+
+  // Pre-fill form if editing
+  useEffect(() => {
+    if (isFetchSuccess && testResponse?.data) {
+      const test = testResponse.data;
+      setFormData({
+        title: test.title || "",
+        candidates: test.candidates || "",
+        slots: String(test.slots) || "",
+        questionSet: test.question_set || "",
+        questionType: test.question_type || "",
+        startTime: test.start_time || "",
+        endTime: test.end_time || "",
+        duration: test.duration || "",
+      });
+    }
+  }, [isFetchSuccess, testResponse]);
 
   // Automatically calculate duration when start or end time changes
   useEffect(() => {
@@ -58,20 +88,32 @@ const AddTestPage = () => {
         start_time: formData.startTime,
         end_time: formData.endTime,
         duration: formData.duration,
-        slots: formData.slots,
+        slots: Number(formData.slots),
         question_set: formData.questionSet,
         question_type: formData.questionType,
       };
 
-      const res = await createTest(payload).unwrap();
+      let finalId = testId;
+
+      if (testId) {
+        // Update existing test
+        await updateTest({ ...payload, id: Number(testId) }).unwrap();
+        toast.success("Test basic information updated successfully!");
+      } else {
+        // Create new test
+        const res = await createTest(payload).unwrap();
+        finalId = res.data.id;
+        toast.success("Test basic information created successfully!");
+      }
       
-      toast.success("Test basic information created successfully!");
-      router.push(`/dashboard/add-test/questions?id=${res.data.id}`);
+      router.push(`/dashboard/add-test/questions?id=${finalId}`);
     } catch (err: any) {
-      console.error("Failed to create test:", err);
-      toast.error(err?.data?.message || "Failed to create test. Please try again.");
+      console.error("Failed to save test:", err);
+      toast.error(err?.data?.message || "Failed to save test. Please try again.");
     }
   };
+
+  const isLoading = isCreating || isUpdating;
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] p-6 lg:p-12">

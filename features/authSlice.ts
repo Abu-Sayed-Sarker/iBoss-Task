@@ -1,7 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { setCookie, removeCookie } from "@/utils/cookies";
 
-const initialState = {
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+}
+
+interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+}
+
+const initialState: AuthState = {
   user: null,
   accessToken: null,
   refreshToken: null,
