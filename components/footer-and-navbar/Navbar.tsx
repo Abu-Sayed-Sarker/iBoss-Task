@@ -3,13 +3,23 @@
 import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "@/features/authSlice";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "react-hot-toast";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useSelector((state: any) => state.auth);
+
+  const getHeaderTitle = () => {
+    if (pathname === "/dashboard") return "Dashboard";
+    if (pathname === "/dashboard/add-test") return "Create Online Test";
+    if (pathname.includes("/manage-test")) return "Manage Online Test";
+    if (pathname.includes("/questions")) return "Questions Sets";
+    if (pathname.includes("/exam")) return "Exam Terminal";
+    return "Dashboard";
+  };
 
   const handleLogout = () => {
     dispatch(logout());
@@ -22,7 +32,10 @@ const Navbar = () => {
       {/* Left Section: Logo and Navigation */}
       <div className="flex items-center gap-12">
         {/* Logo Recreation */}
-        <div className="relative w-32 h-10">
+        <div 
+          className="relative w-32 h-10 cursor-pointer"
+          onClick={() => router.push("/dashboard")}
+        >
            <Image 
              src="/logo02.png" 
              alt="Akij Resource" 
@@ -32,10 +45,19 @@ const Navbar = () => {
            />
         </div>
 
-        {/* Dashboard Link */}
+        {/* Dashboard Link / Dynamic Title */}
         <div className="hidden md:flex items-center ml-4">
-          <span className="text-[#3c4b64] font-medium text-[15px] cursor-pointer hover:text-[#6339f9] transition-colors">
+          <span 
+            onClick={() => router.push("/dashboard")}
+            className="text-[#64748b] font-medium text-[15px] cursor-pointer hover:text-[#6339f9] transition-all flex items-center gap-2"
+          >
             Dashboard
+            {pathname !== "/dashboard" && (
+              <>
+                <span className="text-gray-300 mx-1">/</span>
+                <span className="text-[#1e1e50] font-bold">{getHeaderTitle()}</span>
+              </>
+            )}
           </span>
         </div>
       </div>
