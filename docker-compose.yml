@@ -8,7 +8,7 @@ services:
     container_name: iboss_frontend
     restart: always
     ports:
-      - "3000:3000"
+      - "3008:3000"
     environment:
       - NEXT_PUBLIC_BASE_URL=http://76.13.195.67:5001/api/
       - NODE_ENV=production

@@ -15,7 +15,7 @@ const parseJSON = <T>(value: string | null): T | null => {
 };
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: base_url,
+  baseUrl: "http://76.13.195.67:5001/api/",
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as { auth?: AuthState };
     const token = state.auth?.accessToken || null;
