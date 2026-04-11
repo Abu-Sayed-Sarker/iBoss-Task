@@ -10,7 +10,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
+      - NEXT_PUBLIC_BASE_URL=http://76.13.195.67:5001/api/
       - NODE_ENV=production
     networks:
       - iboss_network
