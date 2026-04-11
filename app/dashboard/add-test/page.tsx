@@ -63,10 +63,10 @@ const AddTestPage = () => {
         question_type: formData.questionType,
       };
 
-      await createTest(payload).unwrap();
+      const res = await createTest(payload).unwrap();
       
       toast.success("Test basic information created successfully!");
-      router.push("/dashboard/add-test/questions");
+      router.push(`/dashboard/add-test/questions?id=${res.data.id}`);
     } catch (err: any) {
       console.error("Failed to create test:", err);
       toast.error(err?.data?.message || "Failed to create test. Please try again.");

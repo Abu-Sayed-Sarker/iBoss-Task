@@ -2,61 +2,87 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, Edit2, Trash2 } from "lucide-react";
 import QuestionModal from "./QuestionModal";
 import { toast } from "react-hot-toast";
+import { useSearchParams } from "next/navigation";
+import { useGetTestByIdQuery } from "@/apis/tests/testsApi";
+import {
+  useAddQuestionMutation,
+  useUpdateQuestionMutation,
+  useDeleteQuestionMutation,
+} from "@/apis/Quations/questionApi";
 
 const QuestionsSetsPage = () => {
+  const searchParams = useSearchParams();
+  const testId = searchParams.get("id");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<any>(null);
 
-  // Initial dummy data
-  const [addedQuestions, setAddedQuestions] = useState([
-    {
-      id: 1,
-      type: "MCQ",
-      points: "1 pt",
-      question: "What is the Capital of Bangladesh?",
-      options: [
-        { label: "A. Dhaka", isCorrect: true },
-        { label: "B. Chattogram", isCorrect: false },
-        { label: "C. Rajshahi", isCorrect: false },
-        { label: "D. Barishal", isCorrect: false },
-      ],
-    },
-    {
-      id: 2,
-      type: "Checkbox",
-      points: "1 pt",
-      question: "What is the Capital of Bangladesh?",
-      options: [
-        { label: "A. Dhaka", isCorrect: true },
-        { label: "B. Chattogram", isCorrect: false },
-        { label: "C. Rajshahi", isCorrect: true },
-        { label: "D. Barishal", isCorrect: false },
-      ],
-    },
-    {
-      id: 3,
-      type: "Text",
-      points: "5 pt",
-      question: "Write a brief of your capital city",
-      description: "Jorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a, mattis tellus. Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus.",
-    },
-  ]);
+  const { data: testResponse, isLoading: isFetching } = useGetTestByIdQuery(testId, {
+    skip: !testId,
+  });
 
-  const handleSaveQuestion = (newQuestion: any) => {
-    const questionWithId = {
-      ...newQuestion,
-      id: addedQuestions.length + 1
-    };
-    setAddedQuestions([...addedQuestions, questionWithId]);
-    toast.success("Question added to exam!");
+  const [addQuestion, { isLoading: isAdding }] = useAddQuestionMutation();
+  const [updateQuestion, { isLoading: isUpdating }] = useUpdateQuestionMutation();
+  const [deleteQuestion, { isLoading: isDeleting }] = useDeleteQuestionMutation();
+
+  const testData = testResponse?.data;
+  const questions = testData?.questions || [];
+
+  const handleSaveQuestion = async (modalQuestion: any) => {
+    try {
+      if (editingQuestion) {
+        // Update question payload - actual payload is just the question object
+        const payload = {
+          ...modalQuestion,
+          id: editingQuestion.id,
+          test_id: Number(testId),
+        };
+
+        await updateQuestion({ id: editingQuestion.id, data: payload }).unwrap();
+        toast.success("Question updated successfully!");
+      } else {
+        // Add question payload - actual payload is just the question object
+        const payload = {
+          ...modalQuestion,
+          id: 0,
+          test_id: Number(testId),
+        };
+
+        await addQuestion(payload).unwrap();
+        toast.success("Question added to exam!");
+      }
+      setIsModalOpen(false);
+      setEditingQuestion(null);
+    } catch (err: any) {
+      console.error("Failed to save question:", err);
+      toast.error(err?.data?.message || "Failed to save question.");
+    }
   };
 
-  const removeQuestion = (id: number) => {
-    setAddedQuestions(addedQuestions.filter(q => q.id !== id));
-    toast.error("Question removed");
+  const handleEdit = (q: any) => {
+    setEditingQuestion(q);
+    setIsModalOpen(true);
   };
+
+  const removeQuestion = async (id: number) => {
+    try {
+      await deleteQuestion({ id }).unwrap();
+      toast.success("Question removed");
+    } catch (err: any) {
+      console.error("Failed to delete question:", err);
+      toast.error("Failed to remove question.");
+    }
+  };
+
+  if (isFetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6339f9]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] p-6 lg:p-12">
@@ -95,11 +121,17 @@ const QuestionsSetsPage = () => {
 
       {/* Questions Review List */}
       <div className="max-w-5xl mx-auto space-y-6 pb-20">
-        {addedQuestions.map((q) => (
-          <div key={q.id} className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] overflow-hidden">
+        {questions.length === 0 && !isFetching && (
+          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+            <p className="text-gray-400">No questions added yet. Click the button below to add one.</p>
+          </div>
+        )}
+
+        {questions.map((q: any, index: number) => (
+          <div key={q.id || index} className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] overflow-hidden">
             {/* Card Header */}
             <div className="px-8 py-5 border-b border-gray-50 flex items-center justify-between">
-              <h3 className="text-[17px] font-bold text-[#1e1e50]">Question {q.id}</h3>
+              <h3 className="text-[17px] font-bold text-[#1e1e50]">Question {index + 1}</h3>
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 rounded-lg border border-gray-100 text-[12px] font-bold text-gray-400 bg-gray-50/50 uppercase">
                   {q.type}
@@ -114,7 +146,7 @@ const QuestionsSetsPage = () => {
             <div className="p-8">
               <p className="text-[16px] font-bold text-[#1e1e50] mb-6">{q.question}</p>
               
-              {q.options ? (
+              {q.options && q.options.length > 0 ? (
                 <div className="space-y-4">
                   {q.options.map((opt: any, idx: number) => (
                     <div 
@@ -136,21 +168,27 @@ const QuestionsSetsPage = () => {
                 </div>
               ) : (
                 <p className="text-[14px] text-gray-400 leading-relaxed font-medium">
-                  {q.description}
+                  {q.description || "No description provided."}
                 </p>
               )}
             </div>
 
             {/* Card Footer */}
             <div className="px-8 py-4 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
-              <button className="text-[14px] font-bold text-[#6339f9] hover:underline transition-all">
+              <button 
+                onClick={() => handleEdit(q)}
+                className="flex items-center gap-2 text-[14px] font-bold text-[#6339f9] hover:underline transition-all"
+              >
+                <Edit2 className="w-4 h-4" />
                 Edit
               </button>
               <button 
                 onClick={() => removeQuestion(q.id)}
-                className="text-[14px] font-bold text-red-400 hover:text-red-500 hover:underline transition-all"
+                disabled={isDeleting}
+                className="flex items-center gap-2 text-[14px] font-bold text-red-400 hover:text-red-500 hover:underline transition-all disabled:opacity-50"
               >
-                Remove From Exam
+                <Trash2 className="w-4 h-4" />
+                {isDeleting ? "Removing..." : "Remove From Exam"}
               </button>
             </div>
           </div>
@@ -159,10 +197,18 @@ const QuestionsSetsPage = () => {
         {/* Add Question Button */}
         <div className="md:px-2">
             <button 
-              onClick={() => setIsModalOpen(true)}
-              className="w-full bg-[#6339f9] text-white font-bold py-4 rounded-xl hover:bg-[#522ed1] transition-all shadow-lg flex items-center justify-center gap-3 active:scale-[0.99]"
+              onClick={() => {
+                setEditingQuestion(null);
+                setIsModalOpen(true);
+              }}
+              disabled={isAdding || isUpdating}
+              className="w-full bg-[#6339f9] text-white font-bold py-4 rounded-xl hover:bg-[#522ed1] transition-all shadow-lg flex items-center justify-center gap-3 active:scale-[0.99] disabled:opacity-70"
             >
-              <Plus className="w-5 h-5" />
+              {(isAdding || isUpdating) ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                <Plus className="w-5 h-5" />
+              )}
               Add Question
             </button>
         </div>
@@ -171,8 +217,12 @@ const QuestionsSetsPage = () => {
       {/* Modal Component */}
       <QuestionModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingQuestion(null);
+        }} 
         onSave={handleSaveQuestion}
+        initialData={editingQuestion}
       />
     </div>
   );

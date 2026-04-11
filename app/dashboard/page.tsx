@@ -12,43 +12,27 @@ import {
   ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
+import { useGetAllTestsQuery } from "@/apis/tests/testsApi";
 
-// Dummy Data
-const dummyTests = [
-  {
-    id: 1,
-    title: "Psychometric Test for Management Trainee Officer",
-    candidates: "10,000",
-    questionSet: "3",
-    examSlots: "3",
-  },
-  {
-    id: 2,
-    title: "Psychometric Test for Management Trainee Officer",
-    candidates: "10,000",
-    questionSet: "3",
-    examSlots: "3",
-  },
-  {
-    id: 3,
-    title: "Psychometric Test for Management Trainee Officer",
-    candidates: "Not Set",
-    questionSet: "Not Set",
-    examSlots: "Not Set",
-  },
-  {
-    id: 4,
-    title: "Psychometric Test for Management Trainee Officer",
-    candidates: "10,000",
-    questionSet: "3",
-    examSlots: "3",
-  },
-];
+// Types
+interface Test {
+  id: number;
+  title: string;
+  candidates: string;
+  question_set: string;
+  slots: number;
+  question_type: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const DashboardPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { data: testsResponse, isLoading } = useGetAllTestsQuery(undefined);
 
-  const filteredTests = dummyTests.filter((test) =>
+  const tests = testsResponse?.data || [];
+
+  const filteredTests = tests.filter((test: Test) =>
     test.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -87,9 +71,26 @@ const DashboardPage = () => {
       </div>
 
       {/* Conditional Rendering: Grid or Empty State */}
-      {filteredTests.length > 0 ? (
+      {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredTests.map((test) => (
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm animate-pulse"
+            >
+              <div className="h-7 bg-gray-100 rounded-lg w-3/4 mb-8"></div>
+              <div className="flex gap-10 mb-10">
+                <div className="h-5 bg-gray-100 rounded w-24"></div>
+                <div className="h-5 bg-gray-100 rounded w-24"></div>
+                <div className="h-5 bg-gray-100 rounded w-24"></div>
+              </div>
+              <div className="h-10 bg-gray-100 rounded-xl w-32"></div>
+            </div>
+          ))}
+        </div>
+      ) : filteredTests.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredTests.map((test: Test) => (
             <div
               key={test.id}
               className="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_-5px_rgba(0,0,0,0.08)] transition-all group"
@@ -107,7 +108,7 @@ const DashboardPage = () => {
                   <div className="flex gap-1.5 text-[15px]">
                     <span className="text-gray-400">Candidates:</span>
                     <span className="text-[#1e1e50] font-bold">
-                      {test.candidates}
+                      {test.candidates ? "N/A" : "0"}
                     </span>
                   </div>
                 </div>
@@ -120,7 +121,7 @@ const DashboardPage = () => {
                   <div className="flex gap-1.5 text-[15px]">
                     <span className="text-gray-400">Question Set:</span>
                     <span className="text-[#1e1e50] font-bold">
-                      {test.questionSet}
+                      {test.question_set || "Not Set"}
                     </span>
                   </div>
                 </div>
@@ -133,7 +134,7 @@ const DashboardPage = () => {
                   <div className="flex gap-1.5 text-[15px]">
                     <span className="text-gray-400">Exam Slots:</span>
                     <span className="text-[#1e1e50] font-bold">
-                      {test.examSlots}
+                      {test.slots || "Not Set"}
                     </span>
                   </div>
                 </div>
